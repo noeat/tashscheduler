@@ -26,7 +26,7 @@ example：
 		std::cout << i++ << ", ";
 	});
 
-	sche.scheduler1(20, 100, &t);
+	sche.scheduler_task(20, 100, &t);
 
 	while (true)
 	{
