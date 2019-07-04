@@ -1,6 +1,7 @@
 #ifndef __TASK_SCHEDULER_H__
 #define __TASK_SCHEDULER_H__
 #include <iterator>
+#include <array>
 #include <tuple>
 #include <assert.h>
 #include<functional>
@@ -430,6 +431,7 @@ void task_scheduler<INT, TVR_BITS, TVN_BITS>::init(INT interval)
 template<typename INT, int TVR_BITS, int TVN_BITS>
 void task_scheduler<INT, TVR_BITS, TVN_BITS>::update(INT elapse)
 {
+	assert(elapse != 0);
 	INT last = next_expiry_ + elapse;
 	while (true)
 	{
@@ -459,8 +461,8 @@ void task_scheduler<INT, TVR_BITS, TVN_BITS>::ontick()
 			if (tmp == INT())
 				break;
 
-			tmp = INT(1) << (TVR_BITS + i * TVN_BITS);
-			cascade(&node_tvs_[i], (jiffies_ - tmp) & TVN_MASK);
+			tmp = (jiffies_ >> (TVR_BITS + i * TVN_BITS)) & TVN_MASK;
+			cascade(&node_tvs_[i], tmp);
 		}
 	}
 
@@ -534,7 +536,7 @@ task_scheduler<INT, TVR_BITS, TVN_BITS>::internal_add_task(task_t task)
 	INT expires = task->expiry_value_ / interval_;
 	INT idx = task->expiry_value_ / interval_ - jiffies_;
 	linked_list_head* vec = NULL;
-	if (idx < TVR_SIZE && idx > 0)
+	if (idx < TVR_SIZE && idx >= 0)
 	{
 		INT index = expires & TVR_MASK;
 		vec = root_tv_[(std::size_t)index];
@@ -551,8 +553,7 @@ task_scheduler<INT, TVR_BITS, TVN_BITS>::internal_add_task(task_t task)
 			INT compare_val = INT(1) << (TVR_BITS + (i + 1) * TVN_BITS);
 			if (idx < compare_val)
 			{
-				INT index = (idx & (~TVR_MASK)) -
-					(INT(1) << (TVR_BITS + i * TVN_BITS)) & TVN_MASK;
+				INT index = (expires >> (TVR_BITS + i * TVN_BITS)) & TVN_MASK;
 				vec = node_tvs_[i][(std::size_t)index];
 				break;
 			}
