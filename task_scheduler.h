@@ -293,7 +293,7 @@ protected:
 	}
 private:
 	_Fty fty_;
-	std::tuple<_Arg...> params_;
+	std::tuple<std::decay_t<_Arg>...> params_;
 };
 
 template<typename INT, typename C, typename ..._Arg>
